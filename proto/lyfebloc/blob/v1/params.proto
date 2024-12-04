@@ -1,0 +1,21 @@
+syntax = "proto3";
+package lyfebloc.blob.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/lyfeblocnetwork/lyfebloc/x/blob/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "lyfebloc/x/blob/v1/Params";
+  option (gogoproto.equal) = true;
+
+  uint32 gas_per_blob_byte = 1 [
+    (gogoproto.moretags) = "yaml:\"gas_per_blob_byte\""
+  ];
+
+  uint64 gov_max_square_size = 2 [
+    (gogoproto.moretags) = "yaml:\"gov_max_square_size\""
+  ];
+}

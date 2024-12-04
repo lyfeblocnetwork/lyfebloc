@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package lyfebloc.liquiditypool;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "lyfebloc/liquiditypool/params.proto";
+import "lyfebloc/liquiditypool/pool.proto";
+import "lyfebloc/liquiditypool/position.proto";
+import "lyfebloc/liquiditypool/accumulator.proto";
+
+option go_package = "github.com/lyfeblocnetwork/lyfebloc/x/liquiditypool/types";
+
+// GenesisState defines the liquiditypool module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1
+      [ (gogoproto.nullable) = false, (amino.dont_omitempty) = true ];
+  repeated Pool pools = 2 [ (gogoproto.nullable) = false ];
+  uint64 pool_count = 3;
+  repeated Position positions = 4 [ (gogoproto.nullable) = false ];
+  uint64 position_count = 5;
+  repeated AccumulatorObject accumulators = 6 [ (gogoproto.nullable) = false ];
+  repeated AccumulatorPosition accumulator_positions = 7
+      [ (gogoproto.nullable) = false ];
+}

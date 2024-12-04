@@ -1,0 +1,24 @@
+syntax = "proto3";
+package lyfebloc.tokenconverter;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/lyfeblocnetwork/lyfebloc/x/tokenconverter/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "lyfebloc/x/tokenconverter/Params";
+  option (gogoproto.equal) = true;
+
+  string bond_denom = 1;
+  string fee_denom = 2;
+  string max_supply_fee = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
+  ];
+}

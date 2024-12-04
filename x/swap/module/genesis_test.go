@@ -1,0 +1,63 @@
+package swap_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	keepertest "github.com/lyfeblocnetwork/lyfebloc/testutil/keeper"
+	"github.com/lyfeblocnetwork/lyfebloc/testutil/nullify"
+	swap "github.com/lyfeblocnetwork/lyfebloc/x/swap/module"
+	"github.com/lyfeblocnetwork/lyfebloc/x/swap/types"
+)
+
+func TestGenesis(t *testing.T) {
+	genesisState := types.GenesisState{
+		Params: types.DefaultParams(),
+
+		IncomingInFlightPacketList: []types.IncomingInFlightPacket{
+			{
+				Index: types.PacketIndex{
+					PortId:    "0",
+					ChannelId: "0",
+					Sequence:  0,
+				},
+			},
+			{
+				Index: types.PacketIndex{
+					PortId:    "1",
+					ChannelId: "1",
+					Sequence:  1,
+				},
+			},
+		},
+		OutgoingInFlightPacketList: []types.OutgoingInFlightPacket{
+			{
+				Index: types.PacketIndex{
+					PortId:    "0",
+					ChannelId: "0",
+					Sequence:  0,
+				},
+			},
+			{
+				Index: types.PacketIndex{
+					PortId:    "1",
+					ChannelId: "1",
+					Sequence:  1,
+				},
+			},
+		},
+		// this line is used by starport scaffolding # genesis/test/state
+	}
+
+	k, _, ctx := keepertest.SwapKeeper(t)
+	swap.InitGenesis(ctx, k, genesisState)
+	got := swap.ExportGenesis(ctx, k)
+	require.NotNil(t, got)
+
+	nullify.Fill(&genesisState)
+	nullify.Fill(got)
+
+	require.ElementsMatch(t, genesisState.OutgoingInFlightPacketList, got.OutgoingInFlightPacketList)
+	require.ElementsMatch(t, genesisState.IncomingInFlightPacketList, got.IncomingInFlightPacketList)
+	// this line is used by starport scaffolding # genesis/test/assert
+}

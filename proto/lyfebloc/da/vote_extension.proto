@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package lyfebloc.da;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "lyfebloc/da/params.proto";
+import "lyfebloc/da/published_data.proto";
+
+option go_package = "github.com/lyfeblocnetwork/lyfebloc/x/da/types";
+
+message VoteExtension { repeated PublishedData data = 1; }

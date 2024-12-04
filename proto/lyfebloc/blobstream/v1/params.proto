@@ -1,0 +1,15 @@
+syntax = "proto3";
+package lyfebloc.blobstream.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/lyfeblocnetwork/lyfebloc/x/blobstream/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "lyfebloc/x/blobstream/v1/Params";
+  option (gogoproto.equal) = true;
+
+  uint64 data_commitment_window = 1;
+}

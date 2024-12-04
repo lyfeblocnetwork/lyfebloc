@@ -1,0 +1,17 @@
+syntax = "proto3";
+package lyfebloc.fee;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "lyfebloc/fee/params.proto";
+
+option go_package = "github.com/lyfeblocnetwork/lyfebloc/x/fee/types";
+
+// GenesisState defines the fee module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
