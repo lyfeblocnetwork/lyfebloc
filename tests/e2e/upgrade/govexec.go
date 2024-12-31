@@ -1,14 +1,24 @@
 // Copyright Lyfeloop Inc.(Lyfebloc)
 // SPDX-License-Identifier:ENCL-1.0(https://github.com/lyfeblocnetwork/lyfebloc/blob/main/LICENSE)
-
 package upgrade
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-
 	"github.com/ory/dockertest/v3/docker"
+)
+
+// ProposalVersion defines the version of the proposal format.
+type ProposalVersion int
+
+const (
+	// UpgradeProposalV50 represents the proposal format for version 5.0.
+	UpgradeProposalV50 ProposalVersion = iota
+	// LegacyProposalPreV50 represents the legacy proposal format before version 5.0.
+	LegacyProposalPreV50
+	// LegacyProposalPreV46 represents the legacy proposal format before version 4.6.
+	LegacyProposalPreV46
 )
 
 // RunExec runs the provided docker exec call
@@ -63,7 +73,6 @@ func getProposalCmd(legacy ProposalVersion, targetVersion string, upgradeHeight 
 		}
 	} else {
 		var upgradeInfo, proposalType string
-
 		switch legacy {
 		case LegacyProposalPreV50:
 			upgradeInfo = "--no-validate"
@@ -74,7 +83,6 @@ func getProposalCmd(legacy ProposalVersion, targetVersion string, upgradeHeight 
 		default:
 			panic(fmt.Sprintf("invalid legacy proposal version: %v", legacy))
 		}
-
 		cmd = []string{
 			"lyfeblocd",
 			"tx",
@@ -85,7 +93,6 @@ func getProposalCmd(legacy ProposalVersion, targetVersion string, upgradeHeight 
 			upgradeInfo,
 		}
 	}
-
 	cmd = append(cmd,
 		"--title=\"TEST\"",
 		"--deposit=10000000alyfe",
@@ -97,7 +104,6 @@ func getProposalCmd(legacy ProposalVersion, targetVersion string, upgradeHeight 
 		"--keyring-backend=test",
 		"--output=text",
 	)
-
 	return cmd
 }
 
@@ -118,7 +124,6 @@ func (m *Manager) CreateDepositProposalExec(chainID string, id int) (string, err
 		"--fees=500alyfe",
 		"--gas=500000",
 	}
-
 	return m.CreateExec(cmd, m.ContainerID())
 }
 
