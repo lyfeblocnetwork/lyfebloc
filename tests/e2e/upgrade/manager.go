@@ -1,6 +1,5 @@
 // Copyright Lyfeloop Inc.(Lyfebloc)
 // SPDX-License-Identifier:ENCL-1.0(https://github.com/lyfeblocnetwork/lyfebloc/blob/main/LICENSE)
-
 package upgrade
 
 import (
@@ -16,7 +15,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/ethereum/go-ethereum/common"
@@ -34,23 +32,17 @@ const safetyDelta = 2
 type Manager struct {
 	pool    *dockertest.Pool
 	network *dockertest.Network
-
 	// CurrentNode stores the currently running docker container
 	CurrentNode *dockertest.Resource
-
 	// CurrentVersion stores the current version of the running node
 	CurrentVersion string
-
 	// HeightBeforeStop stores the last block height that was reached before the last running node container
 	// was stopped
 	HeightBeforeStop int
-
 	// proposalCounter keeps track of the number of proposals that have been submitted
 	proposalCounter uint
-
 	// ProtoCodec is the codec used to marshal/unmarshal protobuf messages
 	ProtoCodec *codec.ProtoCodec
-
 	// UpgradeHeight stores the upgrade height for the latest upgrade proposal that was submitted
 	UpgradeHeight uint
 }
@@ -61,19 +53,16 @@ func NewManager(networkName string) (*Manager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("docker pool creation error: %w", err)
 	}
-
 	network, err := pool.CreateNetwork(networkName)
 	if err != nil {
 		return nil, fmt.Errorf("docker network creation error: %w", err)
 	}
-
 	nw := testnetwork.New()
 	encodingConfig := nw.GetEncodingConfig()
 	protoCodec, ok := encodingConfig.Codec.(*codec.ProtoCodec)
 	if !ok {
 		return nil, fmt.Errorf("failed to get proto codec")
 	}
-
 	return &Manager{
 		pool:       pool,
 		network:    network,
@@ -115,13 +104,11 @@ func (m *Manager) BuildImage(name, version, dockerFile, contextDir string, args 
 func (m *Manager) RunNode(node *Node) error {
 	var resource *dockertest.Resource
 	var err error
-
 	if node.withRunOptions {
 		resource, err = m.pool.RunWithOptions(node.RunOptions)
 	} else {
 		resource, err = m.pool.Run(node.repository, node.version, []string{})
 	}
-
 	if err != nil {
 		if resource == nil || resource.Container == nil {
 			return fmt.Errorf(
@@ -136,7 +123,6 @@ func (m *Manager) RunNode(node *Node) error {
 			stdOut,
 		)
 	}
-
 	// trying to get JSON-RPC server, to make sure node started properly
 	// the last returned error before deadline exceeded will be returned from .Retry()
 	err = m.pool.Retry(
@@ -239,65 +225,57 @@ func (m *Manager) WaitForHeight(ctx context.Context, height int) (string, error)
 
 // GetNodeHeight calls the Lyfebloc CLI in the current node container to get the current block height
 func (m *Manager) GetNodeHeight(ctx context.Context) (int, error) {
-    // Use the JSON output flag for the latest version
-    cmd := []string{"lyfeblocd", "q", "block", "--output=json"}
-    splitIdx := 1 // JSON output is in the second line
-
-    exec, err := m.CreateExec(cmd, m.ContainerID())
-    if err != nil {
-        return 0, fmt.Errorf("create exec error: %w", err)
-    }
-    outBuff, errBuff, err := m.RunExec(ctx, exec)
-    if err != nil {
-        return 0, fmt.Errorf("run exec error: %w", err)
-    }
-    if errBuff.String() != "" {
-        return 0, fmt.Errorf("lyfebloc query error: %s", errBuff.String())
-    }
-
-    // NOTE: we're splitting the output because it has the first line saying "falling back to latest height"
-    splittedOutBuff := strings.Split(outBuff.String(), "\n")
-    if len(splittedOutBuff) < splitIdx+1 {
-        return 0, fmt.Errorf("unexpected output format for node height; got: %s", outBuff.String())
-    }
-    outStr := splittedOutBuff[splitIdx]
-
-    // Parse current height number from block info
-    if outStr != "<nil>" && outStr != "" {
-        h, err := UnwrapBlockHeightPostV50(outStr)
-        if err == nil {
-            // If conversion was possible but the errBuff is not empty, return the height along with an error
-            // This is necessary e.g. when the "duplicate proto" errors occur in the logs but the node is still
-            // producing blocks
-            if errBuff.String() != "" {
-                return h, fmt.Errorf("%s", errBuff.String())
-            }
-            return h, nil
-        }
-        return 0, fmt.Errorf("failed to parse block height: %w", err)
-    }
-
-    return 0, fmt.Errorf("empty or invalid block height output: %s", outStr)
-}
-
-// UnwrapBlockHeightPostV50 parses the block height from the JSON output for versions post v50
-func UnwrapBlockHeightPostV50(outStr string) (int, error) {
-    var block BlockHeaderPostV50
-    if err := json.Unmarshal([]byte(outStr), &block); err != nil {
-        return 0, fmt.Errorf("json unmarshal error: %w", err)
-    }
-    height, err := strconv.Atoi(block.Header.Height)
-    if err != nil {
-        return 0, fmt.Errorf("height conversion error: %w", err)
-    }
-    return height, nil
+	// Use the JSON output flag for the latest version
+	cmd := []string{"lyfeblocd", "q", "block", "--output=json"}
+	splitIdx := 1 // JSON output is in the second line
+	exec, err := m.CreateExec(cmd, m.ContainerID())
+	if err != nil {
+		return 0, fmt.Errorf("create exec error: %w", err)
+	}
+	outBuff, errBuff, err := m.RunExec(ctx, exec)
+	if err != nil {
+		return 0, fmt.Errorf("run exec error: %w", err)
+	}
+	if errBuff.String() != "" {
+		return 0, fmt.Errorf("lyfebloc query error: %s", errBuff.String())
+	}
+	// NOTE: we're splitting the output because it has the first line saying "falling back to latest height"
+	splittedOutBuff := strings.Split(outBuff.String(), "\n")
+	if len(splittedOutBuff) < splitIdx+1 {
+		return 0, fmt.Errorf("unexpected output format for node height; got: %s", outBuff.String())
+	}
+	outStr := splittedOutBuff[splitIdx]
+	// Parse current height number from block info
+	if outStr != "<nil>" && outStr != "" {
+		h, err := UnwrapBlockHeightPostV50(outStr)
+		if err == nil {
+			// If conversion was possible but the errBuff is not empty, return the height along with an error
+			// This is necessary e.g. when the "duplicate proto" errors occur in the logs but the node is still
+			// producing blocks
+			if errBuff.String() != "" {
+				return h, fmt.Errorf("%s", errBuff.String())
+			}
+			return h, nil
+		}
+		return 0, fmt.Errorf("failed to parse block height: %w", err)
+	}
+	return 0, fmt.Errorf("empty or invalid block height output: %s", outStr)
 }
 
 // BlockHeaderPostV50 represents the JSON structure for block header in versions post v50
 type BlockHeaderPostV50 struct {
-    Header struct {
-        Height string `json:"height"`
-    } `json:"header"`
+	Header struct {
+		Height string `json:"height"`
+	} `json:"header"`
+}
+
+// BlockHeaderPreV50 represents the JSON structure for block header in versions pre v50
+type BlockHeaderPreV50 struct {
+	Block struct {
+		Header struct {
+			Height string `json:"height"`
+		} `json:"header"`
+	} `json:"block"`
 }
 
 // UnwrapBlockHeightPreV50 unwraps the block height from the output of the lyfeblocd query block command
@@ -307,7 +285,6 @@ func UnwrapBlockHeightPreV50(input string) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to unmarshal JSON: %v", err)
 	}
-
 	return strconv.Atoi(blockHeader.Block.Header.Height)
 }
 
@@ -318,7 +295,6 @@ func UnwrapBlockHeightPostV50(input string) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to unmarshal JSON: %v", err)
 	}
-
 	return strconv.Atoi(blockHeader.Header.Height)
 }
 
@@ -348,20 +324,16 @@ func (m *Manager) GetUpgradeHeight(ctx context.Context, chainID string) (uint, e
 	if err != nil {
 		return 0, err
 	}
-
 	timeoutCommit, err := m.getTimeoutCommit(ctx)
 	if err != nil {
 		return 0, errorsmod.Wrap(err, "failed to get timeout commit")
 	}
-
 	votingPeriod, err := m.getVotingPeriod(ctx, chainID)
 	if err != nil {
 		return 0, errorsmod.Wrap(err, "failed to get voting period")
 	}
-
 	heightDelta := new(big.Int).Quo(votingPeriod, timeoutCommit)
 	upgradeHeight := uint(currentHeight) + uint(heightDelta.Int64()) + safetyDelta // #nosec G115
-
 	// return the height at which the upgrade will be scheduled
 	return upgradeHeight, nil
 }
@@ -372,27 +344,22 @@ func (m *Manager) getTimeoutCommit(ctx context.Context) (*big.Int, error) {
 	if err != nil {
 		return common.Big0, fmt.Errorf("create exec error: %w", err)
 	}
-
 	outBuff, errBuff, err := m.RunExec(ctx, exec)
 	if err != nil {
 		return common.Big0, fmt.Errorf("failed to execute command: %s", err.Error())
 	}
-
 	if errBuff.String() != "" {
 		return common.Big0, fmt.Errorf("lyfebloc version error: %s", errBuff.String())
 	}
-
 	re := regexp.MustCompile(`timeout_commit = "(?P<t>\d+)s"`)
 	match := re.FindStringSubmatch(outBuff.String())
 	if len(match) != 2 {
 		return common.Big0, fmt.Errorf("failed to parse timeout_commit: %s", outBuff.String())
 	}
-
 	tc, err := strconv.Atoi(match[1])
 	if err != nil {
 		return common.Big0, err
 	}
-
 	return big.NewInt(int64(tc)), nil
 }
 
@@ -406,27 +373,22 @@ func (m *Manager) getVotingPeriod(ctx context.Context, chainID string) (*big.Int
 	if err != nil {
 		return common.Big0, fmt.Errorf("create exec error: %w", err)
 	}
-
 	outBuff, errBuff, err := m.RunExec(ctx, exec)
 	if err != nil {
 		return common.Big0, fmt.Errorf("failed to execute command: %s", err.Error())
 	}
-
 	if errBuff.String() != "" {
 		return common.Big0, fmt.Errorf("lyfebloc version error: %s", errBuff.String())
 	}
-
 	re := regexp.MustCompile(`"voting_period":"(?P<votingPeriod>\d+)s"`)
 	match := re.FindStringSubmatch(outBuff.String())
 	if len(match) != 2 {
 		return common.Big0, fmt.Errorf("failed to parse voting_period: %s", outBuff.String())
 	}
-
 	vp, err := strconv.Atoi(match[1])
 	if err != nil {
 		return common.Big0, err
 	}
-
 	return big.NewInt(int64(vp)), nil
 }
 
