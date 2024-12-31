@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # --------------
 # Commands to run locally
 # docker run --network host --rm -v $(CURDIR):/workspace --workdir /workspace ghcr.io/cosmos/proto-builder:v0.11.6 sh ./protocgen.sh
@@ -18,8 +17,12 @@ for dir in $proto_dirs; do
 	done
 done
 
-# move proto files to the right places
-cp -r github.com/lyfeblocnetwork/lyfebloc/v*/* ./
+# Move proto files to the right places
+# Copy generated files from the proto directory to the root directory
+cp -r proto/lyfebloc/* ./
+
+# Clean up
 rm -rf github.com
 
+# Run additional generation scripts
 sh ./scripts/protocgen-pulsar.sh
