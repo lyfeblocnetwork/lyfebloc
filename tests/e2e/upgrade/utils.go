@@ -33,14 +33,6 @@ func (v LyfeblocVersions) Less(i, j int) bool {
     return v1.LessThan(v2)
 }
 
-// ProposalVersion is an enum to represent the type of upgrade proposal to be used
-// based on the Lyfebloc version.
-type ProposalVersion uint8
-
-const (
-    DefaultProposal ProposalVersion = iota // Default proposal for a new blockchain
-)
-
 // CheckUpgradeProposalVersion checks the upgrade proposal version for the given version string.
 // Since this is a new blockchain, it always returns DefaultProposal.
 func CheckUpgradeProposalVersion(version string) ProposalVersion {
@@ -54,34 +46,27 @@ func RetrieveUpgradesList(upgradesPath string) ([]string, error) {
     if err != nil {
         return nil, err
     }
-
     // Preallocate slice to store versions
     versions := make([]string, 0, len(dirs))
-
     // Pattern to find quoted string (upgrade version) in a file e.g. "v10.0.0"
     pattern := regexp.MustCompile(`"(.*?)"`)
-
     for _, d := range dirs {
         if !d.IsDir() {
             continue
         }
-
         // Creating path to upgrade dir file with constant upgrade version
         constantsPath := fmt.Sprintf("%s/%s/constants.go", upgradesPath, d.Name())
         if _, err = os.Stat(constantsPath); os.IsNotExist(err) {
             continue
         }
-
         f, err := os.ReadFile(constantsPath)
         if err != nil {
             return nil, err
         }
-
         v := pattern.FindString(string(f))
         // v[1 : len(v)-1] subslice used to remove quotes from version string
         versions = append(versions, v[1:len(v)-1])
     }
-
     sort.Sort(LyfeblocVersions(versions))
     return versions, nil
 }
