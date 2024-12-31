@@ -8,7 +8,6 @@ import (
     "os/exec"
     "regexp"
     "sort"
-    "strings"
     "github.com/hashicorp/go-version"
 )
 
