@@ -1,6 +1,5 @@
 // Copyright Lyfeloop Inc.(Lyfebloc)
 // SPDX-License-Identifier:ENCL-1.0(https://github.com/lyfeblocnetwork/lyfebloc/blob/main/LICENSE)
-
 package main
 
 import (
@@ -14,12 +13,10 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
 	"cosmossdk.io/log"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
-
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -45,16 +42,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-
 	rosettaCmd "github.com/cosmos/rosetta/cmd"
-
 	lyfeblocclient "github.com/lyfeblocnetwork/lyfebloc/client"
 	"github.com/lyfeblocnetwork/lyfebloc/client/block"
 	"github.com/lyfeblocnetwork/lyfebloc/client/debug"
 	lyfeblocserver "github.com/lyfeblocnetwork/lyfebloc/server"
 	servercfg "github.com/lyfeblocnetwork/lyfebloc/server/config"
 	srvflags "github.com/lyfeblocnetwork/lyfebloc/server/flags"
-
 	"github.com/lyfeblocnetwork/lyfebloc/app"
 	cmdcfg "github.com/lyfeblocnetwork/lyfebloc/cmd/config"
 	lyfeblockr "github.com/lyfeblocnetwork/lyfebloc/crypto/keyring"
@@ -98,7 +92,6 @@ func NewRootCmd() (*cobra.Command, sdktestutil.TestEncodingConfig) {
 		WithKeyringOptions(lyfeblockr.Option()).
 		WithViper(EnvPrefix).
 		WithLedgerHasProtobuf(true)
-
 	rootCmd := &cobra.Command{
 		Use:   app.Name,
 		Short: "Lyfebloc Daemon",
@@ -106,17 +99,14 @@ func NewRootCmd() (*cobra.Command, sdktestutil.TestEncodingConfig) {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
-
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
-
 			initClientCtx, err = clientcfg.ReadFromClientConfig(initClientCtx)
 			if err != nil {
 				return err
 			}
-
 			// This needs to go after ReadFromClientConfig, as that function
 			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
 			// is only available if the client is online.
@@ -133,25 +123,19 @@ func NewRootCmd() (*cobra.Command, sdktestutil.TestEncodingConfig) {
 				if err != nil {
 					return err
 				}
-
 				initClientCtx = initClientCtx.WithTxConfig(txConfig)
 			}
-
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
-
 			// override the app and tendermint configuration
 			customAppTemplate, customAppConfig := initAppConfig()
 			customTMConfig := initTendermintConfig()
-
 			return sdkserver.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customTMConfig)
 		},
 	}
-
 	cfg := sdk.GetConfig()
 	cfg.Seal()
-
 	a := appCreator{encodingConfig}
 	rootCmd.AddCommand(
 		lyfeblocclient.ValidateChainID(
@@ -179,19 +163,16 @@ func NewRootCmd() (*cobra.Command, sdktestutil.TestEncodingConfig) {
 		snapshot.Cmd(a.newApp),
 		block.Cmd(),
 	)
-
 	changeSetCmd := ChangeSetCmd()
 	if changeSetCmd != nil {
 		rootCmd.AddCommand(changeSetCmd)
 	}
-
 	lyfeblocserver.AddCommands(
 		rootCmd,
 		lyfeblocserver.NewDefaultStartOptions(a.newApp, app.DefaultNodeHome),
 		a.appExport,
 		addModuleInitFlags,
 	)
-
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
 		sdkserver.StatusCommand(),
@@ -203,18 +184,14 @@ func NewRootCmd() (*cobra.Command, sdktestutil.TestEncodingConfig) {
 	if err != nil {
 		panic(err)
 	}
-
 	// add rosetta
 	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
-
 	autoCliOpts := tempApp.AutoCliOpts()
 	initClientCtx, _ = clientcfg.ReadFromClientConfig(initClientCtx)
 	autoCliOpts.ClientCtx = initClientCtx
-
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
-
 	return rootCmd, encodingConfig
 }
 
@@ -231,7 +208,6 @@ func queryCommand() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-
 	cmd.AddCommand(
 		rpc.QueryEventForTxCmd(),
 		rpc.ValidatorCommand(),
@@ -240,9 +216,7 @@ func queryCommand() *cobra.Command {
 		authcmd.QueryTxCmd(),
 		sdkserver.QueryBlockResultsCmd(),
 	)
-
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
-
 	return cmd
 }
 
@@ -254,7 +228,6 @@ func txCommand() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-
 	cmd.AddCommand(
 		authcmd.GetSignCommand(),
 		authcmd.GetSignBatchCommand(),
@@ -266,12 +239,9 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 		authcmd.GetSimulateCmd(),
 	)
-
-	// DefaultGasAdjustment value to use as default in gas-adjustment flag
-	flags.DefaultGasAdjustment = servercfg.DefaultGasAdjustment
-
+	// Set the default value for the gas-adjustment flag
+	cmd.PersistentFlags().Float64(flags.FlagGasAdjustment, servercfg.DefaultGasAdjustment, "Adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored")
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
-
 	return cmd
 }
 
@@ -279,16 +249,13 @@ func txCommand() *cobra.Command {
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
 	customAppTemplate, customAppConfig := servercfg.AppConfig(cmdcfg.BaseDenom)
-
 	srvCfg, ok := customAppConfig.(servercfg.Config)
 	if !ok {
 		panic(fmt.Errorf("unknown app config type %T", customAppConfig))
 	}
-
 	srvCfg.StateSync.SnapshotInterval = 5000
 	srvCfg.StateSync.SnapshotKeepRecent = 2
 	srvCfg.IAVLDisableFastNode = false
-
 	return customAppTemplate, srvCfg
 }
 
@@ -299,38 +266,31 @@ type appCreator struct {
 // newApp is an appCreator
 func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	var cache storetypes.MultiStorePersistentCache
-
 	if cast.ToBool(appOpts.Get(sdkserver.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
 	}
-
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(sdkserver.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
-
 	pruningOpts, err := sdkserver.GetPruningOptionsFromFlags(appOpts)
 	if err != nil {
 		panic(err)
 	}
-
 	home := cast.ToString(appOpts.Get(flags.FlagHome))
 	snapshotDir := filepath.Join(home, "data", "snapshots")
 	snapshotDB, err := dbm.NewDB("metadata", sdkserver.GetAppDBBackend(appOpts), snapshotDir)
 	if err != nil {
 		panic(err)
 	}
-
 	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
 	if err != nil {
 		panic(err)
 	}
-
 	snapshotOptions := snapshottypes.NewSnapshotOptions(
 		cast.ToUint64(appOpts.Get(sdkserver.FlagStateSyncSnapshotInterval)),
 		cast.ToUint32(appOpts.Get(sdkserver.FlagStateSyncSnapshotKeepRecent)),
 	)
-
 	// Setup chainId
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if len(chainID) == 0 {
@@ -347,7 +307,6 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		}
 		chainID = conf.ChainID
 	}
-
 	lyfeblocApp := app.NewLyfebloc(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
@@ -366,7 +325,6 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(sdkserver.FlagDisableIAVLFastNode))),
 		baseapp.SetChainID(chainID),
 	)
-
 	return lyfeblocApp
 }
 
@@ -387,17 +345,14 @@ func (a appCreator) appExport(
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
-
 	if height != -1 {
 		lyfeblocApp = app.NewLyfebloc(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), appOpts)
-
 		if err := lyfeblocApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
 		lyfeblocApp = app.NewLyfebloc(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), appOpts)
 	}
-
 	return lyfeblocApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
 }
 
@@ -406,11 +361,9 @@ func (a appCreator) appExport(
 func initTendermintConfig() *cmtcfg.Config {
 	cfg := cmtcfg.DefaultConfig()
 	cfg.Consensus.TimeoutCommit = time.Second * 3
-
 	// to put a higher strain on node memory, use these values:
 	// cfg.P2P.MaxNumInboundPeers = 100
 	// cfg.P2P.MaxNumOutboundPeers = 40
-
 	return cfg
 }
 
