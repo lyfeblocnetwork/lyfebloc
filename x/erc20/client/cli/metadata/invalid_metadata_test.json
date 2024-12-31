@@ -1,0 +1,21 @@
+{
+  "metadata": [
+    {
+      "description": 1,
+      "denom_units": [
+        {
+          "denom": "alyfe",
+          "exponent": 0
+        },
+        {
+          "denom": "lyfebloc",
+          "exponent": 18
+        }
+      ],
+      "base": "alyfe",
+      "display": "alyfe",
+      "name": "alyfe",
+      "symbol": "LYFEBLOC"
+    }
+  ]
+}
